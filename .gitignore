@@ -1,0 +1,30 @@
+# Virtual environment - never commit this. It is large, machine-specific,
+# and fully reproducible from pyproject.toml.
+.venv/
+venv/
+
+# Python bytecode cache - generated automatically, has no source value.
+__pycache__/
+*.py[cod]
+
+# Installed-package metadata created by `pip install -e .`
+*.egg-info/
+
+# Test and coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Secrets. NEVER commit credentials. See README for the .env.example pattern.
+.env
+
+# Data files. Git stores full copies of every version of every file,
+# so committing large or changing datasets bloats the repo permanently.
+data/raw/*
+!data/raw/.gitkeep
+
+# Editor and OS noise
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
