@@ -1,0 +1,21 @@
+# Line endings.
+#
+# Rule: the repository always stores LF. What lands in your working copy
+# depends on your OS. This keeps diffs clean across Windows and Linux.
+
+# Auto-detect text files; normalise them to LF inside the repository.
+* text=auto
+
+# These MUST stay LF even on Windows, because they are executed by Linux
+# inside containers. A CR here produces "bad interpreter: No such file".
+*.sh       text eol=lf
+*.py       text eol=lf
+Dockerfile text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf
+
+# Binary files: never touch the bytes.
+*.png     binary
+*.jpg     binary
+*.pdf     binary
+*.parquet binary
