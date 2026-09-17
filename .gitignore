@@ -28,3 +28,4 @@ data/raw/*
 .idea/
 Thumbs.db
 desktop.ini
+secrets.yaml
