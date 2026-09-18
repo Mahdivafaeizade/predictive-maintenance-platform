@@ -1,6 +1,6 @@
 """Tests for CSV ingestion: separating real measurements from reporting gaps."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from io import StringIO
 
 from telemetry.ingest import Gap, Measurement, read_rows
@@ -47,7 +47,10 @@ def test_the_timestamp_is_parsed_not_left_as_text():
 
     row = next(read_rows(f))
 
-    assert row.timestamp == datetime(2023, 10, 8, 6, 0, 0)
+    assert row.timestamp == datetime(2023, 10, 8, 6, 0, tzinfo=timezone.utc)
+    assert row.timestamp.tzinfo is not None, (
+        "a naive instant is silently reinterpreted by whoever reads it"
+    )
 
 
 def test_identity_columns_never_appear_among_the_values():

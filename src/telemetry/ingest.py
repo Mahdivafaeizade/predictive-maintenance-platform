@@ -22,13 +22,19 @@ site that consumed no energy.
 import csv
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 #: Columns that identify a row rather than measure anything. Always populated,
 #: even in rows that carry no counters - which is what makes a gap recordable.
 IDENTITY_COLUMNS = ("Base station", "Sector", "Timestamp")
 
 TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+#: The export writes UTC instants without saying so. Attaching the zone here,
+#: at the boundary, is the difference between a fact and an assumption: a naive
+#: datetime is later interpreted in whatever zone the reader happens to be in,
+#: and PostgreSQL will silently shift it by the session offset on insert.
+TIMESTAMP_ZONE = timezone.utc
 
 
 @dataclass(frozen=True)
@@ -88,7 +94,9 @@ def read_rows(lines: Iterable[str]) -> Iterator[Measurement | Gap]:
 
         site = row["Base station"]
         sector = int(row["Sector"])
-        timestamp = datetime.strptime(row["Timestamp"], TIMESTAMP_FORMAT)
+        timestamp = datetime.strptime(
+            row["Timestamp"], TIMESTAMP_FORMAT
+        ).replace(tzinfo=TIMESTAMP_ZONE)
 
         if all(value is None for value in values.values()):
             yield Gap(site=site, sector=sector, timestamp=timestamp)
