@@ -21,6 +21,12 @@ htmlcov/
 # Secrets. NEVER commit credentials. See README for the .env.example pattern.
 .env
 
+# Many PostgreSQL tutorials suggest keeping credentials in database.ini.
+# We use the environment instead, but block the file in case it reappears.
+database.ini
+*.pem
+*.key
+
 # Data files. Git stores full copies of every version of every file,
 # so committing large or changing datasets bloats the repo permanently.
 data/raw/*
