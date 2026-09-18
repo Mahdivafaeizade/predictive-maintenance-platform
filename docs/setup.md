@@ -94,6 +94,74 @@ is a lock file with pinned hashes (`pip install --require-hashes`), which the
 project will adopt in Stage 6. Until then: keep the mirror as a per-shell
 `export`, not a permanent `pip.conf`, so it is a visible decision each time.
 
+## The database
+
+PostgreSQL runs in a container so that the version is pinned, the setup is
+identical on both machines, and a broken database can be thrown away and rebuilt
+in seconds rather than repaired.
+
+    docker run -d --name pmp-postgres \
+      -e POSTGRES_USER=telemetry \
+      -e POSTGRES_PASSWORD=devpassword \
+      -e POSTGRES_DB=telemetry \
+      -p 5433:5432 \
+      -v pmp_pgdata:/var/lib/postgresql \
+      postgres:18-alpine
+
+Port **5433**, not 5432, because a system PostgreSQL may already hold 5432.
+Check before assuming: `ss -tln | grep 5432`.
+
+The mount point is `/var/lib/postgresql`, **not** `/var/lib/postgresql/data`.
+Every tutorial written before PostgreSQL 18 says `data`; 18 moved PGDATA to
+`/var/lib/postgresql/18/docker` so that `pg_upgrade` can work across versions.
+Mounting the old path makes the container refuse to start - correctly, since it
+would otherwise run on an empty database while your data sat in an unused volume.
+Ask the image, not the internet:
+
+    docker image inspect postgres:18-alpine --format '{{range .Config.Env}}{{println .}}{{end}}'
+
+Wait for it to accept connections, then check:
+
+    docker exec pmp-postgres pg_isready -U telemetry -d telemetry
+    docker exec pmp-postgres psql -U telemetry -d telemetry -c '\l'
+
+The container is disposable, the volume is not. `docker rm` loses nothing;
+`docker volume rm pmp_pgdata` loses everything.
+
+### If Docker Hub will not serve the image
+
+On some networks the registry authenticates and returns manifests, then stalls
+on the layers - the same shape of failure as PyPI above. Pull through a mirror
+and retag:
+
+    docker pull docker.arvancloud.ir/library/postgres:18-alpine
+    docker tag docker.arvancloud.ir/library/postgres:18-alpine postgres:18-alpine
+
+Mirrors verified to deliver layers: `docker.arvancloud.ir`, `registry.docker.ir`,
+`docker.iranserver.com`, `hub.hamdocker.ir`, `docker.mobinhost.com`,
+`docker.m.daocloud.io`. The same supply-chain caveat as the PyPI mirror applies:
+a registry hands you code you are about to execute. Prefer pinned digests once
+the project reaches Stage 6.
+
+## Database settings
+
+The application reads connection settings from the environment - never from a
+file inside the repository, and never hard-coded. Copy the template and load it:
+
+    cp .env.example .env
+    set -a && source .env && set +a
+
+`set -a` marks subsequent assignments for export, so they become part of the
+environment that child processes inherit; `set +a` turns that off again.
+
+`.env` is gitignored. `.env.example` is committed and documents which variables
+exist. Never put a real credential in `.env.example`.
+
+Verify the whole chain - Python, network, container, database:
+
+    python -c "from telemetry.db import connect; \
+    conn = connect(); print(conn.execute('select current_database()').fetchone()); conn.close()"
+
 ## Git identity
 
 A fresh machine has no Git identity, and every commit records one permanently:

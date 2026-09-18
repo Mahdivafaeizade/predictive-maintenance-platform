@@ -68,8 +68,8 @@ zero values are preserved as-is. Lives in `data/raw/`, never committed.
 ## Stages
 
     1. Project skeleton                          DONE
-    2. CSV ingestion, parsing, validation        IN PROGRESS
-    3. PostgreSQL storage, SQL, SQLAlchemy
+    2. CSV ingestion, parsing, validation        DONE
+    3. PostgreSQL storage, SQL, SQLAlchemy       IN PROGRESS
     4. FastAPI service, auth, API testing
     5. ML pipeline: features, models, evaluation
     6. Docker, CI/CD, deployment, MLOps
@@ -96,6 +96,15 @@ These are real and must be respected in every model and every API response:
   15-minute averaged user counter. Typical floor: 0.5-2%. Above roughly 5% with no
   users, suspect interference, blocked PRBs, aggressive SI config, a vendor counter
   that also includes PUCCH/overhead, or users failing to register in the KPI.
+- **Energy is reported at three different grains in one row.** Verified on
+  Dataset_01: radio-unit energy is identical in the LTE and NR files for the same
+  sector and instant (151,026/151,026 rows), and baseband energy is identical
+  across every sector of a site (50,343/50,343 groups). Stored alongside the
+  counters it would be double- and triple-counted by any SUM(). The schema puts
+  it in `radio_energy` and `baseband_energy` so the duplicate cannot be written.
+- **Timestamps in the export are UTC but carry no zone.** They are made
+  timezone-aware at parse time. A naive instant inserted into `timestamptz` is
+  shifted by whatever the session timezone happens to be.
 - **The counter measures the scheduler, not the radio.** CRS, PSS/SSS and PBCH
   permanently occupy resource elements but are usually excluded from PRB
   utilisation, which counts PDSCH scheduling. "Physically occupied" and "counted by
