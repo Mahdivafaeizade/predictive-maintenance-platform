@@ -3,7 +3,11 @@ name = "telemetry"
 version = "0.1.0"
 description = "Sensor telemetry analytics and predictive maintenance platform"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    # PostgreSQL driver. A real dependency, not a dev tool: src/telemetry/db.py
+    # imports it, so anyone installing this package needs it.
+    "psycopg[binary]>=3.2",
+]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
@@ -18,5 +22,13 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# schema.sql is not Python, so setuptools would leave it out of an installed
+# wheel. It is part of the package, not a loose file next to it.
+[tool.setuptools.package-data]
+telemetry = ["sql/*.sql"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "integration: needs a running PostgreSQL; skipped automatically when absent",
+]
