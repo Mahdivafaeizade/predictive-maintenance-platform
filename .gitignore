@@ -10,6 +10,9 @@ __pycache__/
 # Installed-package metadata created by `pip install -e .`
 *.egg-info/
 
+# Jupyter checkpoint copies - generated, and they duplicate notebook content.
+.ipynb_checkpoints/
+
 # Test and coverage artifacts
 .pytest_cache/
 .coverage

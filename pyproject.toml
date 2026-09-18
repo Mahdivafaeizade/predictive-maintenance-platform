@@ -7,6 +7,9 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+# Exploration tools only. Nothing in src/ may import these - the moment real
+# code does, the package moves up into [project] dependencies.
+notebook = ["jupyterlab>=4.0", "ipykernel>=6.29", "pandas>=2.2", "matplotlib>=3.9"]
 
 [build-system]
 requires = ["setuptools>=68"]
